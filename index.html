@@ -3,108 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Página Profesional</title>
+    <title>Aplicación de Videollamada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
+            font-family: 'Inter', sans-serif;
         }
-        header {
-            background: #007BFF;
-            color: #fff;
-            padding: 1rem;
-            text-align: center;
+        video {
+            transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
         }
-        nav {
-            margin: 1rem 0;
-        }
-        nav a {
-            color: #fff;
-            margin: 0 15px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        section {
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        footer {
-            text-align: center;
-            padding: 1rem;
-            background: #333;
-            color: #fff;
-            position: relative;
+        .status-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
             bottom: 0;
-            width: 100%;
-        }
-        .contact-form {
             display: flex;
-            flex-direction: column;
-        }
-        .contact-form input, .contact-form textarea {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .contact-form button {
-            background: #007BFF;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
             color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .contact-form button:hover {
-            background: #0056b3;
-        }
-        @media (max-width: 600px) {
-            nav a {
-                display: block;
-                margin: 5px 0;
-            }
+            z-index: 10;
+            text-align: center;
+            padding: 1rem;
         }
     </style>
 </head>
-<body>
-    <header>
-        <h1>Bienvenido a Mi Página Profesional</h1>
-        <nav>
-            <a href="#about">Sobre Mí</a>
-            <a href="#services">Servicios</a>
-            <a href="#contact">Contacto</a>
-        </nav>
-    </header>
-    <section id="about">
-        <h2>Sobre Mí</h2>
-        <p>Hola, soy [Tu Nombre], un profesional en [tu área de especialización]. Tengo [número] años de experiencia y me apasiona ayudar a mis clientes a alcanzar sus objetivos.</p>
-    </section>
-    <section id="services">
-        <h2>Servicios</h2>
-        <ul>
-            <li>Servicio 1: Descripción breve.</li>
-            <li>Servicio 2: Descripción breve.</li>
-            <li>Servicio 3: Descripción breve.</li>
-        </ul>
-    </section>
-    <section id="contact">
-        <h2>Contacto</h2>
-        <form class="contact-form">
-            <input type="text" placeholder="Tu Nombre" required>
-            <input type="email" placeholder="Tu Correo" required>
-            <textarea rows="4" placeholder="Tu Mensaje" required></textarea>
-            <button type="submit">Enviar Mensaje</button>
-        </form>
-    </section>
-    <footer>
-        <p>&copy; 2025 Mi Página Profesional. Todos los derechos reservados.</p>
-    </footer>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+
+    <div class="container mx-auto p-4 max-w-4xl">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-cyan-400">Videollamada P2P</h1>
+
+        <!-- Sección de Inicio: Crear o Unirse a una Sala -->
+        <div id="home" class="bg-gray-800 p-8 rounded-2xl shadow-lg">
+            <h2 class="text-2xl font-semibold mb-6 text-center">Crea o Únete a una Sala</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <button id="createBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Crear Sala Nueva</button>
+                <div class="flex-grow flex items-center bg-gray-700 rounded-lg">
+                    <input type="text" id="joinCodeInput" class="bg-transparent w-full p-3 focus:outline-none" placeholder="Ingresa el código para unirte">
+                    <button id="joinBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-r-lg transition duration-300">Unirse</button>
+                </div>
+            </div>
+            <!-- Mensaje de error de permisos -->
+            <div id="permissionError" class="hidden mt-4 p-3 bg-red-900 border border-red-700 text-red-200 rounded-lg text-center"></div>
+        </div>
+
+        <!-- Sección de la Sala de Video -->
+        <div id="room" class="hidden">
+            <div class="bg-gray-800 p-4 md:p-6 rounded-2xl shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">En la llamada</h2>
+                    <button id="inviteBtn" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                        Invitar / Ver Código
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Video Local -->
+                    <div class="relative bg-black rounded-lg overflow-hidden aspect-video">
+                        <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                        <span class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-sm px-2 py-1 rounded">Tú</span>
+                    </div>
+                    <!-- Video Remoto -->
+                    <div class="relative bg-black rounded-lg overflow-hidden aspect-video">
+                        <div id="remoteVideoStatus" class="status-overlay">Esperando a que alguien se una...</div>
+                        <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                        <span id="remoteUserLabel" class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-sm px-2 py-1 rounded hidden">Otra Persona</span>
+                    </div>
+                </div>
+
+                <!-- Controles de la llamada -->
+                <div class="mt-6 flex justify-center items-center gap-4">
+                    <button id="micBtn" class="bg-gray-600 hover:bg-gray-500 p-3 rounded-full transition duration-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                    </button>
+                    <button id="hangupBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition duration-300">Colgar</button>
+                    <button id="videoBtn" class="bg-gray-600 hover:bg-gray-500 p-3 rounded-full transition duration-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Invitación -->
+    <div id="inviteModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-lg text-center w-full max-w-sm mx-4">
+            <h3 class="text-2xl font-semibold mb-4">Comparte este código para invitar</h3>
+            <p class="text-gray-400 mb-6">Envía este código a la persona con la que quieres hablar.</p>
+            <div id="modalCodeContainer" class="bg-gray-900 rounded-lg p-4 mb-6 cursor-pointer" title="Haz clic para copiar">
+                <p id="modalRoomCode" class="text-3xl font-mono tracking-widest text-cyan-400 break-all"></p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="modalCopyBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Copiar Código</button>
+                <button id="modalCloseBtn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIza...", authDomain: "...", projectId: "...", };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-video-app';
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const servers = {
+            iceServers: [ { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] } ],
+            iceCandidatePoolSize: 10,
+        };
+
+        let pc = new RTCPeerConnection(servers);
+        let localStream = null;
+        let remoteStream = null;
+        let roomId = null;
+        let unsubscribeRoom = null;
+
+        const homeDiv = document.getElementById('home');
+        const roomDiv = document.getElementById('room');
+        const createBtn = document.getElementById('createBtn');
+        const joinBtn = document.getElementById('joinBtn');
+        const joinCodeInput = document.getElementById('joinCodeInput');
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const remoteVideoStatus = document.getElementById('remoteVideoStatus');
+        const remoteUserLabel = document.getElementById('remoteUserLabel');
+        const hangupBtn = document.getElementById('hangupBtn');
+        const micBtn = document.getElementById('micBtn');
+        const videoBtn = document.getElementById('videoBtn');
+        const permissionErrorDiv = document.getElementById('permissionError');
+        const inviteModal = document.getElementById('inviteModal');
+        const inviteBtn = document.getElementById('inviteBtn');
+        const modalRoomCode = document.getElementById('modalRoomCode');
+        const modalCopyBtn = document.getElementById('modalCopyBtn');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalCodeContainer = document.getElementById('modalCodeContainer');
+
+        function handlePermissionsError(err) {
+            console.error("Error de permisos o de dispositivo:", err);
+            let message = "Error: No se pudo acceder a la cámara o al micrófono. Comprueba que no estén siendo usados por otra aplicación.";
+            if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+                message = "Error de Permiso: Se necesita acceso a la cámara y al micrófono. Por favor, permite el acceso en tu navegador y vuelve a intentarlo.";
+            }
+            permissionErrorDiv.innerText = message;
+            permissionErrorDiv.classList.remove('hidden');
+        }
+
+        async function setupWebcamAndStream() {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            remoteStream = new MediaStream();
+
+            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            
+            pc.ontrack = event => {
+                event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
+                remoteVideoStatus.classList.add('hidden'); // Ocultar estado
+                remoteUserLabel.classList.remove('hidden'); // Mostrar etiqueta
+            };
+
+            localVideo.srcObject = localStream;
+            remoteVideo.srcObject = remoteStream;
+
+            pc.oniceconnectionstatechange = () => {
+                console.log(`ICE connection state: ${pc.iceConnectionState}`);
+                if (pc.iceConnectionState === 'connecting') {
+                    remoteVideoStatus.innerText = 'Conectando...';
+                    remoteVideoStatus.classList.remove('hidden');
+                } else if (pc.iceConnectionState === 'failed') {
+                    remoteVideoStatus.innerText = 'La conexión falló. Intenta de nuevo.';
+                    remoteVideoStatus.classList.remove('hidden');
+                } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+                    remoteVideoStatus.classList.add('hidden');
+                }
+            };
+        }
+
+        createBtn.onclick = async () => {
+            try {
+                await setupWebcamAndStream();
+                permissionErrorDiv.classList.add('hidden');
+                
+                const roomCollectionRef = collection(db, `artifacts/${appId}/public/data/rooms`);
+                const newRoomRef = await addDoc(roomCollectionRef, {});
+                roomId = newRoomRef.id;
+                
+                homeDiv.classList.add('hidden');
+                roomDiv.classList.remove('hidden');
+                
+                showInviteModal();
+
+                const callerCandidatesCollection = collection(newRoomRef, 'callerCandidates');
+                pc.onicecandidate = event => {
+                    if (event.candidate) addDoc(callerCandidatesCollection, event.candidate.toJSON());
+                };
+                
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                
+                await setDoc(newRoomRef, { offer: { type: offer.type, sdp: offer.sdp } });
+
+                unsubscribeRoom = onSnapshot(newRoomRef, async snapshot => {
+                    const data = snapshot.data();
+                    if (!pc.currentRemoteDescription && data?.answer) {
+                        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    }
+                });
+
+                onSnapshot(collection(newRoomRef, 'calleeCandidates'), snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                    });
+                });
+            } catch (err) {
+                handlePermissionsError(err);
+            }
+        };
+
+        joinBtn.onclick = async () => {
+            roomId = joinCodeInput.value.trim();
+            if (!roomId) {
+                joinCodeInput.focus();
+                joinCodeInput.style.borderColor = 'red';
+                setTimeout(() => { joinCodeInput.style.borderColor = ''; }, 2000);
+                return;
+            }
+
+            try {
+                await setupWebcamAndStream();
+                permissionErrorDiv.classList.add('hidden');
+
+                homeDiv.classList.add('hidden');
+                roomDiv.classList.remove('hidden');
+                remoteVideoStatus.innerText = 'Conectando...';
+
+                const roomRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomId);
+                const roomSnapshot = await getDoc(roomRef);
+
+                if (!roomSnapshot.exists()) {
+                    remoteVideoStatus.innerText = 'Error: La sala no existe.';
+                    setTimeout(hangup, 3000);
+                    return;
+                }
+                
+                const calleeCandidatesCollection = collection(roomRef, 'calleeCandidates');
+                pc.onicecandidate = event => {
+                    if (event.candidate) addDoc(calleeCandidatesCollection, event.candidate.toJSON());
+                };
+
+                await pc.setRemoteDescription(new RTCSessionDescription(roomSnapshot.data().offer));
+
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+
+                await updateDoc(roomRef, { answer: { type: answer.type, sdp: answer.sdp } });
+
+                onSnapshot(collection(roomRef, 'callerCandidates'), snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                    });
+                });
+            } catch (err) {
+                handlePermissionsError(err);
+            }
+        };
+        
+        async function hangup() {
+            if (localStream) localStream.getTracks().forEach(track => track.stop());
+            if (pc) pc.close();
+            if (roomId) await deleteDoc(doc(db, `artifacts/${appId}/public/data/rooms`, roomId));
+            if (unsubscribeRoom) unsubscribeRoom();
+            window.location.reload();
+        }
+        hangupBtn.onclick = hangup;
+
+        micBtn.onclick = () => {
+            localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled;
+            micBtn.classList.toggle('bg-red-500', !localStream.getAudioTracks()[0].enabled);
+        };
+
+        videoBtn.onclick = () => {
+            localStream.getVideoTracks()[0].enabled = !localStream.getVideoTracks()[0].enabled;
+            videoBtn.classList.toggle('bg-red-500', !localStream.getVideoTracks()[0].enabled);
+        };
+        
+        function showInviteModal() {
+            modalRoomCode.innerText = roomId;
+            inviteModal.classList.remove('hidden');
+        }
+
+        inviteBtn.onclick = showInviteModal;
+        modalCloseBtn.onclick = () => inviteModal.classList.add('hidden');
+        inviteModal.onclick = (e) => { if (e.target === inviteModal) inviteModal.classList.add('hidden'); };
+
+        const copyAction = () => {
+            navigator.clipboard.writeText(roomId).then(() => {
+                modalCopyBtn.innerText = '¡Copiado!';
+                setTimeout(() => { modalCopyBtn.innerText = 'Copiar Código'; }, 2000);
+            }, () => {
+                modalCopyBtn.innerText = 'Error al copiar';
+            });
+        };
+        modalCopyBtn.onclick = copyAction;
+        modalCodeContainer.onclick = copyAction;
+
+    </script>
 </body>
 </html>
